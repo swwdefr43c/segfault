@@ -1,0 +1,56 @@
+# 配置 GitHub Actions Workflow 的名称
+name: segfault
+
+# 配置触发 Workflow 的条件，包括定时触发和手动触发
+on:
+  # 配置定时触发，使用 cron 表达式
+  schedule:
+    - cron: "20 12,22 * * *"
+
+  # 20 表示20分钟
+  # 12,22 表示12点和22点
+  # * * * 分别表示每天、每月、每星期
+  # 这个cron表达式表示在每天的12点和22点的第20分钟触发运行任务
+
+
+
+  # 配置手动触发，可以通过 GitHub 仓库页面上的 "Run workflow" 按钮手动触发
+  workflow_dispatch:
+  
+# 定义一个 Job（作业）
+jobs:
+  build:
+    # 指定作业运行的操作系统环境
+    runs-on: ubuntu-latest
+
+    # 设置作业的条件，只有在仓库是私有的情况下才执行
+    if: ${{ github.event.repository.private }}
+
+    # 定义作业的步骤
+    steps:
+      # 步骤 1: 检出代码
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # 步骤 2: 设置 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      # 步骤 3: 安装依赖
+      - name: Install requirements
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+      
+      # 步骤 4: 运行 segfault.py
+      - name: Run segfault.py
+        run: |
+          python3 segfault.py
+        env:
+          SEG_LOGIN: ${{ secrets.SEG_LOGIN }}
+
+
+      # 详情请参考：https://docs.github.com/en/actions/using-workflows
